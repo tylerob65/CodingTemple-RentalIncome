@@ -1,5 +1,6 @@
 from time import sleep
 import sys
+import csv
 
 class Rental():
     """
@@ -221,6 +222,63 @@ class Rental():
         """
         ROI = self.get_yearly_cashflow() * 100 / self.get_total_investment()
         return f"{round(ROI,2):.2f}%"
+    
+    def export_summary(self,property_name:str):
+        """
+        Function to create CSV summarizing results of program. Must provide property name
+        Property name must only contains letters, spaces, or numbers. Property name will be
+        basis of file name.
+        """
+        file_name = "_".join(property_name.split())+"_ValueEstimate.csv"
+        with open(file_name,"w") as file:
+            writer = csv.writer(file)
+            # Establish reusable lambda
+            format_money = lambda x: f"{x:,.2f}"
+            writer.writerow(["Rental Property Name",property_name])
+            writer.writerow([''])
+
+            # Income Section
+            writer.writerow(["INCOME"]) 
+            writer.writerow(["Monthly Income ($)","Income Name"])
+            for name,amount in self.income_dict.items():
+                writer.writerow([format_money(amount),name])
+            writer.writerow([''])
+            writer.writerow([format_money(self.get_monthly_income()),"Total Monthly Income"])
+            writer.writerow([format_money(self.get_yearly_income()),"Total Yearly Income"])
+            writer.writerow([''])
+            writer.writerow([''])
+
+            # Expenses Section
+            writer.writerow(["EXPENSES"]) 
+            writer.writerow(["Monthly Expenses ($)","Expense Name"])
+            for name,amount in self.expense_dict.items():
+                writer.writerow([format_money(amount),name])
+            writer.writerow([''])
+            writer.writerow([format_money(self.get_monthly_expenses()),"Total Monthly Expense"])
+            writer.writerow([format_money(self.get_yearly_expenses()),"Total Yearly Expense"])
+            writer.writerow([''])
+            writer.writerow([''])
+
+            # Cashflow Section
+            writer.writerow(["CASHFLOW"])
+            writer.writerow([format_money(self.get_monthly_cashflow()),"Monthly Cashflow"])
+            writer.writerow([format_money(self.get_yearly_cashflow()),"Yearly Cashflow"])
+            writer.writerow([''])
+            writer.writerow([''])
+
+            # Investments Section
+            writer.writerow(["INVESTMENTS"])
+            writer.writerow(["Investment Amount ($)","Investment Name"])
+            for name,amount in self.investment_dict.items():
+                writer.writerow([format_money(amount),name])
+            writer.writerow([''])
+            writer.writerow([format_money(self.get_total_investment()),"Total Investment"])
+            writer.writerow([''])
+            writer.writerow([''])
+
+            # ROI Section
+            writer.writerow(["CASH ON CASH ROI"])
+            writer.writerow([self.get_yearly_return_on_investment(),"Cash on Cash ROI"])
     
 
 def rental_property_calculator():
@@ -645,15 +703,6 @@ def rental_property_calculator():
             money = get_valid_money(prompt)
             rental.add_investment(source_name,money)
 
-        
-        # prompt = "Down Payments: What was the down payment?: "
-        # response = get_valid_money(prompt)
-        # rental.add_investment("down payment",response)
-
-        # prompt = "Closing Cost: How much did you pay in closing cost"
-        # response = get_valid_money(prompt)
-        # rental.add_investment("closing cost",response)
-
         p("Here is a summary of your current investments")
     
         sleep(delay_time)
@@ -661,8 +710,6 @@ def rental_property_calculator():
         sleep(delay_time)
         
         p("The options I gave you are just some of the examples of different types of investment costs")
-        p("You now have the option to name other up front investments")
-        p("You after this, you will be given the option to remove or update any previously added investments")
 
         prompt = "Would you like to add, update, or remove any investments? Type 'y' for yes or 'n' for no: "
         modifying = get_y_or_n(prompt)
@@ -720,9 +767,25 @@ def rental_property_calculator():
         p("With this this information, we can calculate your Cash on Cash return on investment (ROI)")
         p("Your cash on cash ROI is....")
         p(rental.get_yearly_return_on_investment())
+
+        p()
+        p("If you want, we can create a csv containing all of this information")
+        prompt = "Would you like to create a CSV file containing all of this information? Type 'y' for yes or 'n' for no: "
+        wants_summary = get_y_or_n(prompt)
+        if wants_summary:
+            p("Great!")
+            p("We will ask that you provide a name for this rental property.")
+            p("And that name will be used in the file name of the CSV")
+            p("Be warned, this may overwrite any summaries previously created with the same property name.")
+            p("Also, please only use letters, spaces, and numbers in property name")
+            p("What would you like to name this property?: ")
+            property_name = input().strip()
+            rental.export_summary(property_name)
+            p("Your summary file has been created")
+
         p("Thank you for using this program!!!")
 
-
+    # Created the Rental Object
     rental = Rental()
     # Constant to manipulate delay time in displaying certain information
     delay_time = 1
